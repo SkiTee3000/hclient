@@ -25,7 +25,6 @@ class _ConnectionWrapperState extends ConsumerState<ConnectionWrapper>
   @override
   void initState() {
     super.initState();
-    remove for now...
     
     Future.delayed(const Duration(seconds: 5)).then(
       (_) async {
