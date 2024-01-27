@@ -25,15 +25,15 @@ class _ConnectionWrapperState extends ConsumerState<ConnectionWrapper>
   @override
   void initState() {
     super.initState();
-    // remove for now...
-    //
-    // Future.delayed(const Duration(seconds: 2)).then(
-    //   (_) async {
-    //     if (ref.read(startedByUserProvider) && PlatformUtils.isDesktop) {
-    //       loggy.debug("previously started by user, trying to connect");
-    //       return ref.read(connectionNotifierProvider.notifier).mayConnect();
-    //     }
-    //   },
-    // );
+    remove for now...
+    
+    Future.delayed(const Duration(seconds: 5)).then(
+      (_) async {
+        if (ref.read(startedByUserProvider) && PlatformUtils.isDesktop) {
+          loggy.debug("previously started by user, trying to connect");
+          return ref.read(connectionNotifierProvider.notifier).mayConnect();
+        }
+      },
+    );
   }
 }
