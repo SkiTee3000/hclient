@@ -34,6 +34,6 @@ class _ConnectionWrapperState extends ConsumerState<ConnectionWrapper>
           return ref.read(connectionNotifierProvider.notifier).mayConnect();
         }
       },
-    );
+    ); 
   }
 }
