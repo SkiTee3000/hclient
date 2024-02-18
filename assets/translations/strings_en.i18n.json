@@ -125,6 +125,8 @@
         "emptyProxiesMsg": "No proxies available",
         "delayTestTooltip": "Test Delay",
         "sortTooltip": "Sort Proxies",
+        "checkIp": "Check IP",
+        "unknownIp": "Unknown IP",
         "sortOptions": {
             "unsorted": "Default",
             "name": "Alphabetically",
@@ -186,7 +188,9 @@
             "openWorkingDir": "Open Working Directory",
             "ignoreBatteryOptimizations": "Disable Battery Optimization",
             "ignoreBatteryOptimizationsMsg": "Remove restrictions for optimal VPN performance",
-            "dynamicNotification": "Display speed in notification"
+            "dynamicNotification": "Display speed in notification",
+            "hapticFeedback": "Haptic Feedback",
+            "autoIpCheck": "Automatically check connection IP"
         },
         "advanced": {
             "sectionTitle": "Advanced",
@@ -233,6 +237,8 @@
                 "title": "Cloudflare WARP Consent",
                 "description(rich)": "Cloudflare WARP is a free WireGuard VPN provider. By enabling this option you are agreeing to the Cloudflare WARP's ${tos(Terms of Service)} and ${privacy(Privacy Policy)}."
             },
+            "generateWarpConfig": "Generate WARP config",
+            "missingWarpConfig": "Missing WARP config",
             "pageTitle": "Config Options",
             "logLevel": "Log Level",
             "resolveDestination": "Resolve Destination",

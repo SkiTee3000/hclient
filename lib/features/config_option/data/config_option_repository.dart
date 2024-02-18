@@ -7,6 +7,7 @@ import 'package:hiddify/features/geo_asset/data/geo_asset_path_resolver.dart';
 import 'package:hiddify/features/geo_asset/data/geo_asset_repository.dart';
 import 'package:hiddify/singbox/model/singbox_config_option.dart';
 import 'package:hiddify/singbox/model/singbox_rule.dart';
+import 'package:hiddify/singbox/service/singbox_service.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +18,7 @@ abstract interface class ConfigOptionRepository {
     ConfigOptionPatch patch,
   );
   TaskEither<ConfigOptionFailure, Unit> resetConfigOption();
+  TaskEither<ConfigOptionFailure, Unit> generateWarpConfig();
 }
 
 abstract interface class SingBoxConfigOptionRepository {
@@ -27,14 +29,18 @@ abstract interface class SingBoxConfigOptionRepository {
 class ConfigOptionRepositoryImpl
     with ExceptionHandler, InfraLogger
     implements ConfigOptionRepository {
-  ConfigOptionRepositoryImpl({required this.preferences});
+  ConfigOptionRepositoryImpl({
+    required this.preferences,
+    required this.singbox,
+  });
 
   final SharedPreferences preferences;
+  final SingboxService singbox;
 
   @override
   Either<ConfigOptionFailure, ConfigOptionEntity> getConfigOption() {
     try {
-      final map = ConfigOptionEntity.initial().toMap();
+      final map = ConfigOptionEntity.initial().toJson();
       for (final key in map.keys) {
         final persisted = preferences.get(key);
         if (persisted != null) {
@@ -49,7 +55,7 @@ class ConfigOptionRepositoryImpl
           map[key] = persisted;
         }
       }
-      final options = ConfigOptionEntityMapper.fromMap(map);
+      final options = ConfigOptionEntity.fromJson(map);
       return right(options);
     } catch (error, stackTrace) {
       return left(ConfigOptionUnexpectedFailure(error, stackTrace));
@@ -62,7 +68,7 @@ class ConfigOptionRepositoryImpl
   ) {
     return exceptionHandler(
       () async {
-        final map = patch.toMap();
+        final map = patch.toJson();
         await updateByJson(map);
         return right(unit);
       },
@@ -74,7 +80,7 @@ class ConfigOptionRepositoryImpl
   TaskEither<ConfigOptionFailure, Unit> resetConfigOption() {
     return exceptionHandler(
       () async {
-        final map = ConfigOptionEntity.initial().toMap();
+        final map = ConfigOptionEntity.initial().toJson();
         await updateByJson(map);
         return right(unit);
       },
@@ -86,7 +92,7 @@ class ConfigOptionRepositoryImpl
   Future<void> updateByJson(
     Map<String, dynamic> options,
   ) async {
-    final map = ConfigOptionEntity.initial().toMap();
+    final map = ConfigOptionEntity.initial().toJson();
     for (final key in map.keys) {
       final value = options[key];
       if (value != null) {
@@ -106,6 +112,35 @@ class ConfigOptionRepositoryImpl
         }
       }
     }
+  }
+
+  @override
+  TaskEither<ConfigOptionFailure, Unit> generateWarpConfig() {
+    return exceptionHandler(
+      () async {
+        final options = getConfigOption().getOrElse((l) => throw l);
+        return await singbox
+            .generateWarpConfig(
+              licenseKey: options.warpLicenseKey,
+              previousAccountId: options.warpAccountId,
+              previousAccessToken: options.warpAccessToken,
+            )
+            .mapLeft((l) => ConfigOptionFailure.unexpected(l))
+            .flatMap(
+              (warp) => updateConfigOption(
+                ConfigOptionPatch(
+                  warpAccountId: warp.accountId,
+                  warpAccessToken: warp.accessToken,
+                ),
+              ),
+            )
+            .run();
+      },
+      (error, stackTrace) {
+        loggy.error(error);
+        return ConfigOptionUnexpectedFailure(error, stackTrace);
+      },
+    );
   }
 }
 

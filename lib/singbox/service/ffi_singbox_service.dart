@@ -13,6 +13,7 @@ import 'package:hiddify/singbox/model/singbox_config_option.dart';
 import 'package:hiddify/singbox/model/singbox_outbound.dart';
 import 'package:hiddify/singbox/model/singbox_stats.dart';
 import 'package:hiddify/singbox/model/singbox_status.dart';
+import 'package:hiddify/singbox/model/warp_account.dart';
 import 'package:hiddify/singbox/service/singbox_service.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:loggy/loggy.dart';
@@ -121,7 +122,7 @@ class FFISingboxService with InfraLogger implements SingboxService {
     return TaskEither(
       () => CombineWorker().execute(
         () {
-          final json = options.toJson();
+          final json = jsonEncode(options.toJson());
           final err = _box
               .changeConfigOptions(json.toNativeUtf8().cast())
               .cast<Utf8>()
@@ -453,5 +454,45 @@ class FFISingboxService with InfraLogger implements SingboxService {
       }
     }
     return _logBuffer;
+  }
+
+  @override
+  TaskEither<String, WarpAccount> generateWarpConfig({
+    required String licenseKey,
+    required String previousAccountId,
+    required String previousAccessToken,
+  }) {
+    loggy.debug("generating warp config");
+    return TaskEither(
+      () => CombineWorker().execute(
+        () {
+          final response = _box
+              .generateWarpConfig(
+                licenseKey.toNativeUtf8().cast(),
+                previousAccountId.toNativeUtf8().cast(),
+                previousAccessToken.toNativeUtf8().cast(),
+              )
+              .cast<Utf8>()
+              .toDartString();
+          if (response.startsWith("error:")) {
+            return left(response.replaceFirst('error:', ""));
+          }
+          if (jsonDecode(response)
+              case {
+                "account-id": final String newAccountId,
+                "access-token": final String newAccessToken,
+              }) {
+            return right(
+              WarpAccount(
+                licenseKey: licenseKey,
+                accountId: newAccountId,
+                accessToken: newAccessToken,
+              ),
+            );
+          }
+          return left("invalid response");
+        },
+      ),
+    );
   }
 }

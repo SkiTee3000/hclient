@@ -8,6 +8,7 @@ import 'package:hiddify/singbox/model/singbox_config_option.dart';
 import 'package:hiddify/singbox/model/singbox_outbound.dart';
 import 'package:hiddify/singbox/model/singbox_stats.dart';
 import 'package:hiddify/singbox/model/singbox_status.dart';
+import 'package:hiddify/singbox/model/warp_account.dart';
 import 'package:hiddify/singbox/service/singbox_service.dart';
 import 'package:hiddify/utils/custom_loggers.dart';
 import 'package:rxdart/rxdart.dart';
@@ -80,7 +81,7 @@ class PlatformSingboxService with InfraLogger implements SingboxService {
         loggy.debug("changing options");
         await methodChannel.invokeMethod(
           "change_config_options",
-          options.toJson(),
+          jsonEncode(options.toJson()),
         );
         return right(unit);
       },
@@ -260,6 +261,41 @@ class PlatformSingboxService with InfraLogger implements SingboxService {
       () async {
         await methodChannel.invokeMethod("clear_logs");
         return right(unit);
+      },
+    );
+  }
+
+  @override
+  TaskEither<String, WarpAccount> generateWarpConfig({
+    required String licenseKey,
+    required String previousAccountId,
+    required String previousAccessToken,
+  }) {
+    return TaskEither(
+      () async {
+        loggy.debug("generating warp config");
+        final warpConfig = await methodChannel.invokeMethod(
+          "generate_warp_config",
+          {
+            "license-key": licenseKey,
+            "previous-account-id": previousAccountId,
+            "previous-access-token": previousAccessToken,
+          },
+        );
+        if (jsonDecode(warpConfig as String)
+            case {
+              "account-id": final String newAccountId,
+              "access-token": final String newAccessToken,
+            }) {
+          return right(
+            WarpAccount(
+              licenseKey: licenseKey,
+              accountId: newAccountId,
+              accessToken: newAccessToken,
+            ),
+          );
+        }
+        return left("invalid response");
       },
     );
   }

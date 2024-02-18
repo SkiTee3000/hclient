@@ -69,6 +69,42 @@ class IPText extends HookConsumerWidget {
   }
 }
 
+class UnknownIPText extends HookConsumerWidget {
+  const UnknownIPText({
+    required this.text,
+    required this.onTap,
+    this.constrained = false,
+    super.key,
+  });
+
+  final String text;
+  final VoidCallback onTap;
+  final bool constrained;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
+    final textTheme = Theme.of(context).textTheme;
+    final style = constrained ? textTheme.bodySmall : textTheme.labelMedium;
+
+    return Semantics(
+      label: t.proxies.ipInfoSemantics.address,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Text(
+            text,
+            style: style,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class IPCountryFlag extends HookConsumerWidget {
   const IPCountryFlag({required this.countryCode, this.size = 24, super.key});
 
