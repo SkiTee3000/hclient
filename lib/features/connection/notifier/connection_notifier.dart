@@ -25,6 +25,17 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
       }).run();
     }
 
+    ref.listenSelf(
+      (previous, next) async {
+        if (previous == next) return;
+        if (previous case AsyncData(:final value) when !value.isConnected) {
+          if (next case AsyncData(value: final Connected _)) {
+            await ref.read(hapticServiceProvider.notifier).heavyImpact();
+          }
+        }
+      },
+    );
+
     ref.listen(
       activeProfileProvider.select((value) => value.asData?.value),
       (previous, next) async {
@@ -116,8 +127,8 @@ class ConnectionNotifier extends _$ConnectionNotifier with AppLogger {
     )
         .mapLeft((err) async {
       loggy.warning("error connecting", err);
-      loggy.warning(
-          err); //Go err is not normal object to see the go errors are string and need to be dumped
+      //Go err is not normal object to see the go errors are string and need to be dumped
+      loggy.warning(err);
       if (err.toString().contains("panic")) {
         await Sentry.captureException(Exception(err.toString()));
       }

@@ -56,7 +56,11 @@
             "remainingDuration": "${duration} Days Remaining",
             "remainingTrafficSemanticLabel": "${consumed} of ${total} traffic consumed.",
             "expired": "Expired",
-            "noTraffic": "Out of Quota"
+            "noTraffic": "Out of Quota",
+            "upload": "Upload",
+            "download": "Download",
+            "total": "Total Traffic",
+            "expireDate": "Expire Date"
         },
         "sortBy": {
             "lastUpdate": "Recently updated",
@@ -239,6 +243,7 @@
             },
             "generateWarpConfig": "Generate WARP config",
             "missingWarpConfig": "Missing WARP config",
+            "warpConfigGenerated": "WARP config generated",
             "pageTitle": "Config Options",
             "logLevel": "Log Level",
             "resolveDestination": "Resolve Destination",
