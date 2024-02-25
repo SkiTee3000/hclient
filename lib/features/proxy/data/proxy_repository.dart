@@ -112,7 +112,12 @@ class ProxyRepositoryImpl
   }
 
   @override
-  TaskEither<ProxyFailure, Unit> urlTest(String groupTag) {
+  TaskEither<ProxyFailure, Unit> urlTest(String groupTag_) {
+    var groupTag = groupTag_;
+    if (!["auto", "select"].contains(groupTag)) {
+      loggy.warning("only proxy group can do url test");
+      groupTag = "select";
+    }
     return exceptionHandler(
       () => singbox.urlTest(groupTag).mapLeft(ProxyUnexpectedFailure.new).run(),
       ProxyUnexpectedFailure.new,
@@ -121,6 +126,9 @@ class ProxyRepositoryImpl
 
   final Map<String, IpInfo Function(Map<String, dynamic> response)>
       _ipInfoSources = {
+    // "https://geolocation-db.com/json/": IpInfo.fromGeolocationDbComJson, //bug response is not json
+    "https://ipwho.is/": IpInfo.fromIpwhoIsJson,
+    "https://api.ip.sb/geoip/": IpInfo.fromIpSbJson,
     "https://ipapi.co/json/": IpInfo.fromIpApiCoJson,
     "https://ipinfo.io/json/": IpInfo.fromIpInfoIoJson,
   };
