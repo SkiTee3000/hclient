@@ -20,7 +20,7 @@ GEO_ASSETS_DIR=assets$(SEP)core
 CORE_PRODUCT_NAME=hiddify-core
 CORE_NAME=$(CORE_PRODUCT_NAME)
 LIB_NAME=libcore
-SRV_NAME=HiddifyService
+
 ifeq ($(CHANNEL),prod)
 	CORE_URL=https://github.com/hiddify/hiddify-next-core/releases/download/v$(core.version)
 else
@@ -58,7 +58,8 @@ prepare:
 	@echo    make ios-prepare
 
 windows-prepare: get-geo-assets get gen translate windows-libs
-ios-prepare: get-geo-assets get gen translate ios-libs
+	
+ios-prepare: get-geo-assets get gen translate ios-libs 
 macos-prepare: get-geo-assets get gen translate macos-libs
 linux-prepare: get-geo-assets get gen translate linux-libs
 linux-appimage-prepare:linux-prepare
@@ -69,7 +70,11 @@ android-prepare: get-geo-assets get gen translate android-libs
 android-apk-prepare:android-prepare
 android-aab-prepare:android-prepare
 
-	
+
+.PHONY: protos
+protos:
+	make -C libcore -f Makefile protos
+	protoc --dart_out=grpc:lib/singbox/generated --proto_path=libcore/protos libcore/protos/*.proto
 
 macos-install-dependencies:
 	brew install create-dmg tree 
@@ -77,7 +82,27 @@ macos-install-dependencies:
 	dart pub global activate flutter_distributor
 
 ios-install-dependencies: 
-	echo "not yet implemented"
+	if [ "$(flutter)" = "true" ]; then \
+		curl -L -o ~/Downloads/flutter_macos_3.19.3-stable.zip https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_3.19.3-stable.zip; \
+		mkdir -p ~/develop; \
+		cd ~/develop; \
+		unzip ~/Downloads/flutter_macos_3.19.3-stable.zip; \
+		export PATH="$$PATH:$$HOME/develop/flutter/bin"; \
+		echo 'export PATH="$$PATH:$$HOME/develop/flutter/bin"' >> ~/.zshrc; \
+		export PATH="$PATH:$HOME/develop/flutter/bin"; \
+		echo 'export PATH="$PATH:$HOME/develop/flutter/bin"' >> ~/.zshrc; \
+		curl -sSL https://rvm.io/mpapis.asc | gpg --import -; \
+		curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -; \
+		curl -sSL https://get.rvm.io | bash -s stable; \
+		brew install openssl@1.1; \
+		PKG_CONFIG_PATH=$(brew --prefix openssl@1.1)/lib/pkgconfig rvm install 2.7.5; \
+		sudo gem install cocoapods -V; \
+	fi
+	brew install create-dmg tree 
+	npm install -g appdmg
+	
+	dart pub global activate flutter_distributor
+	
 
 android-install-dependencies: 
 	echo "nothing yet"
@@ -124,10 +149,10 @@ android-aab-release:
 	ls -R build/app/outputs
 
 windows-release:
-	flutter_distributor package --flutter-build-args=verbose --platform windows --targets exe $(DISTRIBUTOR_ARGS)
+	flutter_distributor package --flutter-build-args=verbose --platform windows --targets exe,msix $(DISTRIBUTOR_ARGS)
 
 linux-release: 
-	flutter_distributor package --platform linux --targets deb,rpm,appimage $(DISTRIBUTOR_ARGS)
+	flutter_distributor package --flutter-build-args=verbose --platform linux --targets deb,rpm,appimage $(DISTRIBUTOR_ARGS)
 
 macos-release:
 	flutter_distributor package --platform macos --targets dmg,pkg $(DISTRIBUTOR_ARGS)
@@ -146,8 +171,7 @@ windows-libs:
 	$(MKDIR) $(DESKTOP_OUT) || echo Folder already exists. Skipping...
 	curl -L $(CORE_URL)/$(CORE_NAME)-windows-amd64.tar.gz | tar xz -C $(DESKTOP_OUT)$(SEP)
 	ls $(DESKTOP_OUT) || dir $(DESKTOP_OUT)$(SEP)
-	$(RM) $(DESKTOP_OUT)$(SEP)HiddifyService.exe 
-	#temporary disable windows service
+	
 
 linux-libs:
 	mkdir -p $(DESKTOP_OUT)
@@ -182,7 +206,6 @@ build-linux-libs:
 
 build-macos-libs:
 	make -C libcore -f Makefile macos-universal
-	mv $(BINDIR)/$(SRV_NAME) $(DESKTOP_OUT)/
 
 build-ios-libs: 
 	rf -rf $(IOS_OUT)/Libcore.xcframework 
@@ -207,9 +230,10 @@ release: # Create a new tag for release.
 	BUILD_NUMBER=$$(( $${VERSION_ARRAY[0]} * 10000 + $${VERSION_ARRAY[1]} * 100 + $${VERSION_ARRAY[2]} )) && \
 	echo "version: $${VERSION_STR}+$${BUILD_NUMBER}" && \
 	sed -i "s/^version: .*/version: $${VERSION_STR}\+$${BUILD_NUMBER}/g" pubspec.yaml && \
+	sed -i "s/^msix_version: .*/msix_version: $${VERSION_ARRAY[0]}.$${VERSION_ARRAY[1]}.$${VERSION_ARRAY[2]}.0/g" windows/packaging/msix/make_config.yaml && \
 	sed -i "s/CURRENT_PROJECT_VERSION = $${cbuild_number}/CURRENT_PROJECT_VERSION = $${BUILD_NUMBER}/g" ios/Runner.xcodeproj/project.pbxproj && \
 	sed -i "s/MARKETING_VERSION = $${cstr_version}/MARKETING_VERSION = $${VERSION_STR}/g" ios/Runner.xcodeproj/project.pbxproj && \
-	git add ios/Runner.xcodeproj/project.pbxproj pubspec.yaml&& \
+	git add ios/Runner.xcodeproj/project.pbxproj pubspec.yaml windows/packaging/msix/make_config.yaml && \
 	git commit -m "release: version $${TAG}" && \
 	echo "creating git tag : v$${TAG}" && \
 	git push && \
@@ -225,3 +249,4 @@ ios-temp-prepare:
 	cd ios
 	pod install
 	
+

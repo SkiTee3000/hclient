@@ -1,13 +1,17 @@
 import 'package:dartx/dartx.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_easy_permission/easy_permissions.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+// import 'package:permission_handler/permission_handler.dart';
 
-class QRCodeScannerScreen extends HookConsumerWidget with PresLogger {
+const permissions = [Permissions.CAMERA];
+const permissionGroup = [PermissionGroup.Camera];
+
+class QRCodeScannerScreen extends StatefulHookConsumerWidget {
   const QRCodeScannerScreen({super.key});
 
   Future<String?> open(BuildContext context) async {
@@ -20,14 +24,69 @@ class QRCodeScannerScreen extends HookConsumerWidget with PresLogger {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QRCodeScannerScreen> createState() =>
+      _QRCodeScannerScreenState();
+}
+
+class _QRCodeScannerScreenState extends ConsumerState<QRCodeScannerScreen>
+    with WidgetsBindingObserver, PresLogger {
+  final controller =
+      MobileScannerController(detectionTimeoutMs: 500, autoStart: false);
+  bool started = false;
+
+  late FlutterEasyPermission _easyPermission;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _easyPermission = FlutterEasyPermission()
+      ..addPermissionCallback(onGranted: (requestCode, androidPerms, iosPerm) {
+        debugPrint("android:$androidPerms");
+        debugPrint("iOS:$iosPerm");
+        startQrScannerIfPermissionGranted();
+      }, onDenied: (requestCode, androidPerms, iosPerm, isPermanent) {
+        if (isPermanent) {
+          FlutterEasyPermission.showAppSettingsDialog(title: "Camera");
+        } else {
+          debugPrint("android:$androidPerms");
+          debugPrint("iOS:$iosPerm");
+        }
+      }, onSettingsReturned: () {
+        startQrScannerIfPermissionGranted();
+      });
+  }
+
+  @override
+  void dispose() {
+    controller.stop();
+    _easyPermission.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void startQrScannerIfPermissionGranted() {
+    FlutterEasyPermission.has(perms: permissions, permsGroup: permissionGroup)
+        .then((value) {
+      if (value) {
+        controller.start().then((result) {
+          if (result != null) {
+            setState(() {
+              started = true;
+            });
+          }
+        }).catchError((error) {
+          loggy.warning("Error starting scanner: $error");
+        });
+      } else {}
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
 
-    final controller = useMemoized(
-      () => MobileScannerController(detectionTimeoutMs: 500),
-    );
-
-    useEffect(() => controller.dispose, []);
+    startQrScannerIfPermissionGranted();
 
     final size = MediaQuery.sizeOf(context);
     final overlaySize = (size.shortestSide - 12).coerceAtMost(248);
@@ -112,15 +171,16 @@ class QRCodeScannerScreen extends HookConsumerWidget with PresLogger {
               );
             },
           ),
-          CustomPaint(
-            painter: ScannerOverlay(
-              Rect.fromCenter(
-                center: size.center(Offset.zero),
-                width: overlaySize,
-                height: overlaySize,
+          if (started)
+            CustomPaint(
+              painter: ScannerOverlay(
+                Rect.fromCenter(
+                  center: size.center(Offset.zero),
+                  width: overlaySize,
+                  height: overlaySize,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

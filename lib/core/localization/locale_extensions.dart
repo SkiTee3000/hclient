@@ -3,7 +3,7 @@ import 'package:hiddify/gen/translations.g.dart';
 
 extension AppLocaleX on AppLocale {
   String get preferredFontFamily =>
-      this == AppLocale.fa ? FontFamily.shabnam : "";
+      this == AppLocale.fa ? FontFamily.shabnam : FontFamily.emoji;
 
   String get localeName => switch (flutterLocale.toString()) {
         "en" => "English",
@@ -13,6 +13,7 @@ extension AppLocaleX on AppLocale {
         "zh_TW" => "中文 (台湾)",
         "tr" => "Türkçe",
         "es" => "Spanish",
+        "id" => "Indonesian",
         "pt_BR" => "Portuguese (Brazil)",
         _ => "Unknown",
       };

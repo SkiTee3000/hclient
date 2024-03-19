@@ -8,7 +8,8 @@ on:
       - 'appcast.xml'
   push:
     branches:
-      - main
+       - main
+       - dev
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -24,6 +25,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     secrets: inherit
     permissions: write-all
+    if: "${{!contains(github.event.head_commit.message, 'release: version')}}"
     with:
       upload-artifact: ${{ github.event_name == 'push' }}
       

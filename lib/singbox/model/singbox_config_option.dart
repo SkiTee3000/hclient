@@ -25,6 +25,7 @@ class SingboxConfigOption with _$SingboxConfigOption {
     required String directDnsAddress,
     required DomainStrategy directDnsDomainStrategy,
     required int mixedPort,
+    required int tproxyPort,
     required int localDnsPort,
     required TunImplementation tunImplementation,
     required int mtu,
@@ -41,19 +42,11 @@ class SingboxConfigOption with _$SingboxConfigOption {
     required bool enableFakeDns,
     required bool enableDnsRouting,
     required bool independentDnsCache,
-    required bool enableTlsFragment,
-    @OptionalRangeJsonConverter() required OptionalRange tlsFragmentSize,
-    @OptionalRangeJsonConverter() required OptionalRange tlsFragmentSleep,
-    required bool enableTlsMixedSniCase,
-    required bool enableTlsPadding,
-    @OptionalRangeJsonConverter() required OptionalRange tlsPaddingSize,
-    required bool enableMux,
-    required bool muxPadding,
-    required int muxMaxStreams,
-    required MuxProtocol muxProtocol,
     required String geoipPath,
     required String geositePath,
     required List<SingboxRule> rules,
+    required SingboxMuxOption mux,
+    required SingboxTlsTricks tlsTricks,
     required SingboxWarpOption warp,
   }) = _SingboxConfigOption;
 
@@ -68,6 +61,7 @@ class SingboxConfigOption with _$SingboxConfigOption {
 
 @freezed
 class SingboxWarpOption with _$SingboxWarpOption {
+  @JsonSerializable(fieldRename: FieldRename.kebab)
   const factory SingboxWarpOption({
     required bool enable,
     required WarpDetourMode mode,
@@ -77,10 +71,40 @@ class SingboxWarpOption with _$SingboxWarpOption {
     required String accessToken,
     required String cleanIp,
     required int cleanPort,
-    @OptionalRangeJsonConverter() required OptionalRange warpNoise,
-    @OptionalRangeJsonConverter() required OptionalRange warpNoiseDelay,
+    @OptionalRangeJsonConverter() required OptionalRange noise,
+    @OptionalRangeJsonConverter() required OptionalRange noiseDelay,
   }) = _SingboxWarpOption;
 
   factory SingboxWarpOption.fromJson(Map<String, dynamic> json) =>
       _$SingboxWarpOptionFromJson(json);
+}
+
+@freezed
+class SingboxMuxOption with _$SingboxMuxOption {
+  @JsonSerializable(fieldRename: FieldRename.kebab)
+  const factory SingboxMuxOption({
+    required bool enable,
+    required bool padding,
+    required int maxStreams,
+    required MuxProtocol protocol,
+  }) = _SingboxMuxOption;
+
+  factory SingboxMuxOption.fromJson(Map<String, dynamic> json) =>
+      _$SingboxMuxOptionFromJson(json);
+}
+
+@freezed
+class SingboxTlsTricks with _$SingboxTlsTricks {
+  @JsonSerializable(fieldRename: FieldRename.kebab)
+  const factory SingboxTlsTricks({
+    required bool enableFragment,
+    @OptionalRangeJsonConverter() required OptionalRange fragmentSize,
+    @OptionalRangeJsonConverter() required OptionalRange fragmentSleep,
+    required bool mixedSniCase,
+    required bool enablePadding,
+    @OptionalRangeJsonConverter() required OptionalRange paddingSize,
+  }) = _SingboxTlsTricks;
+
+  factory SingboxTlsTricks.fromJson(Map<String, dynamic> json) =>
+      _$SingboxTlsTricksFromJson(json);
 }

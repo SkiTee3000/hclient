@@ -98,7 +98,7 @@ Future<void> lazyBootstrap(
       () => container.read(windowNotifierProvider.future),
     );
 
-    final silentStart = container.read(silentStartNotifierProvider);
+    final silentStart = container.read(Preferences.silentStart);
     Logger.bootstrap
         .debug("silent start [${silentStart ? "Enabled" : "Disabled"}]");
     if (!silentStart) {
@@ -106,20 +106,18 @@ Future<void> lazyBootstrap(
     } else {
       Logger.bootstrap.debug("silent start, remain hidden accessible via tray");
     }
-
     await _init(
       "auto start service",
       () => container.read(autoStartNotifierProvider.future),
     );
   }
-
   await _init(
     "logs repository",
     () => container.read(logRepositoryProvider.future),
   );
   await _init("logger controller", () => LoggerController.postInit(debug));
-  Logger.bootstrap.info(appInfo.format());
 
+  Logger.bootstrap.info(appInfo.format());
   await _init(
     "geo assets repository",
     () => container.read(geoAssetRepositoryProvider.future),
@@ -127,11 +125,6 @@ Future<void> lazyBootstrap(
   await _init(
     "profile repository",
     () => container.read(profileRepositoryProvider.future),
-  );
-
-  await _init(
-    "sing-box",
-    () => container.read(singboxServiceProvider).init(),
   );
 
   await _safeInit(
@@ -144,7 +137,10 @@ Future<void> lazyBootstrap(
     () => container.read(deepLinkNotifierProvider.future),
     timeout: 1000,
   );
-
+  await _init(
+    "sing-box",
+    () => container.read(singboxServiceProvider).init(),
+  );
   if (PlatformUtils.isDesktop) {
     await _safeInit(
       "system tray",
@@ -183,6 +179,7 @@ Future<T> _init<T>(
   int? timeout,
 }) async {
   final stopWatch = Stopwatch()..start();
+  Logger.bootstrap.info("initializing [$name]");
   Future<T> func() => timeout != null
       ? initializer().timeout(Duration(milliseconds: timeout))
       : initializer();
@@ -206,7 +203,7 @@ Future<T?> _safeInit<T>(
 }) async {
   try {
     return await _init(name, initializer, timeout: timeout);
-  } catch (_) {
+  } catch (e) {
     return null;
   }
 }
