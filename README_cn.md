@@ -34,7 +34,7 @@
 
 🔍 基于延迟自动选择节点
 
-🟡 全面的协议支持：**Vless、Vmess、Reality、TUIC、Hysteria、SSH**
+🟡 全面的协议支持：**Vless、Vmess、Reality、TUIC、Wireguard、Hysteria、SSH**
 
 🟡 多种订阅链接和配置文件格式支持： **Sing-box、V2ray、Clash、Clash meta**
 
@@ -118,7 +118,7 @@
 
 <div align=center>
     
-[![Wiki上的所有教程](https://github.com/hiddify/hiddify-next/assets/125398461/95bb5cf8-c143-4934-87d6-b9d4c31e035e)](https://github.com/hiddify/hiddify-next/wiki)
+[![Wiki上的所有教程](https://github.com/hiddify/hiddify-next/assets/125398461/95bb5cf8-c143-4934-87d6-b9d4c31e035e)](https://hiddify.com/app/)
 
 </div>
  

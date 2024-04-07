@@ -40,7 +40,7 @@
 🔍 Delay based node selection
 
 🟡 Wide range of protocols:
-Vless, Vmess, Reality, TUIC, Hysteria, SSH etc.
+Vless, Vmess, Reality, TUIC, Hysteria, Wireguard, SSH etc.
 
 🟡 Subscription link and configuration formats: Sing-box, V2ray, Clash, Clash meta
 
@@ -124,7 +124,7 @@ Vless, Vmess, Reality, TUIC, Hysteria, SSH etc.
 
 <div align="center">
 
-[![Tutorials on Wiki](https://github.com/hiddify/hiddify-next/assets/125398461/95bb5cf8-c143-4934-87d6-b9d4c31e035e)](https://github.com/hiddify/hiddify-next/wiki)
+[![Tutorials on Wiki](https://github.com/hiddify/hiddify-next/assets/125398461/95bb5cf8-c143-4934-87d6-b9d4c31e035e)](https://hiddify.com/app/)
 
 
 </div>
